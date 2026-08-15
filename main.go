@@ -2,9 +2,29 @@ package main
 
 import (
 	"fmt"
+	"bufio"
+	"os"
 )
 
 func main() {
-	fmt.Println("'Hello, World!'")
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		fmt.Print("Pokedex > ")
+
+		scanner.Scan()
+		user_input := scanner.Text()
+		cleaned_user_input := cleanInput(user_input)
+		cmd, ok := commandRegister[cleaned_user_input[0]]
+		if !ok {
+			fmt.Println("Unknown command")
+		} else {
+			err := cmd.callback(&configuration)
+			if err != nil {
+				fmt.Printf("error when calling command: %s\n", err)
+			}
+		}
+	}
 }
+
 
