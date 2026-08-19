@@ -19,12 +19,10 @@ func main() {
 		if !ok {
 			fmt.Println("Unknown command")
 		} else {
-			err := cmd.callback(&configuration)
+			err := cmd.callback(&configuration, cleaned_user_input[1:])
 			if err != nil {
 				fmt.Printf("error when calling command: %s\n", err)
 			}
 		}
 	}
 }
-
-
