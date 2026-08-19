@@ -6,6 +6,7 @@ import (
 	"os"
 	"github.com/CrstKng/pokedexcli/internal/pokeapi"
 	"time"
+	"math/rand"
 )
 
 type config struct {
@@ -13,6 +14,7 @@ type config struct {
 	next 	 		string
 	previous 		string
 	pokeapiClient   *pokeapi.Client
+	caught_pokemons map[string]pokeapi.Pokemon
 }
 
 type cliCommand struct {
@@ -47,6 +49,21 @@ var commandRegister = map[string]cliCommand{
 		description: "Explore the pokemons in a certain location",
 		callback: commandExplore,
 	},
+	"catch": {
+		name: "catch",
+		description: "Catch a pokemon",
+		callback: commandCatch,
+	},
+	"inspect": {
+		name: "inspect",
+		description: "Displays pokemon info",
+		callback: commandInspect,
+	},
+	"pokedex": {
+		name: "pokedex",
+		description: "Displays caught pokemons",
+		callback: commandPokedex,
+	},
 }
 
 var configuration = config{
@@ -54,6 +71,7 @@ var configuration = config{
 	next: "https://pokeapi.co/api/v2/location-area/",
 	previous: "",
 	pokeapiClient: pokeapi.NewClient(20 * time.Second, time.Minute),
+	caught_pokemons: make(map[string]pokeapi.Pokemon),
 
 }
 
@@ -119,6 +137,56 @@ func commandExplore(ptr_config *config, location_names []string) error {
 	fmt.Println("Found Pokemon:")
 	for _, pokemon_encounter := range locationArea.Pokemon_encounters {
 		fmt.Println(pokemon_encounter.Pokemon.Name)
+	}
+	return nil
+}
+
+func commandCatch(ptr_config *config, input []string) error {
+	if len(input) == 0 {
+		return fmt.Errorf("you must provide a Pokemon name")
+	}
+	url := "https://pokeapi.co/api/v2/pokemon/" + input[0] + "/"
+	pokemon, err := ptr_config.pokeapiClient.PokemonInfo(url)
+	if err != nil {
+		return fmt.Errorf("error when getting Pokemon info: %s", err)
+	}
+	fmt.Printf("Throwing a Pokeball at %s...\n", input[0])
+	if rand.Intn(pokemon.Base_experience) > 50 {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
+	} else {
+		fmt.Printf("%s was caught!\n", pokemon.Name)
+		fmt.Println("You may now inspect it with the inspect command.")
+		ptr_config.caught_pokemons[pokemon.Name] = pokemon
+	}
+	return nil
+}
+
+func commandInspect(ptr_config *config, input []string) error {
+	if len(input) == 0 {
+		return fmt.Errorf("you must provide a Pokemon name")
+	}
+	if pokemon, ok := ptr_config.caught_pokemons[input[0]]; !ok {
+		fmt.Println("you have not caught that pokemon")
+	} else {
+		fmt.Printf("Name: %s\n", pokemon.Name)
+		fmt.Printf("Height: %d\n", pokemon.Height)
+		fmt.Printf("Weight: %d\n", pokemon.Weight)
+		fmt.Println("Stats:")
+		for _, stat := range pokemon.Stats {
+			fmt.Printf("- %s: %d\n", stat.Stat.Name, stat.Base_stat)
+		}
+		fmt.Println("Types:")
+		for _, pokemonType := range pokemon.Types {
+			fmt.Printf("- %s\n", pokemonType.Type.Name)
+		}
+	}
+	return nil
+}
+
+func commandPokedex(ptr_config *config, input []string) error {
+	fmt.Println("Your Pokedex:")
+	for key, _ := range ptr_config.caught_pokemons {
+		fmt.Printf("- %s\n", key)
 	}
 	return nil
 }

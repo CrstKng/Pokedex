@@ -27,6 +27,24 @@ type Name struct {
 	Language 	NamedAPIResource
 }
 
+type Pokemon struct {
+	Name string
+	Base_experience int
+	Height int
+	Weight int
+	Stats []PokemonStat
+	Types []PokemonType
+}
+
+type PokemonStat struct {
+	Stat NamedAPIResource
+	Base_stat int
+}
+
+type PokemonType struct {
+	Type NamedAPIResource
+}
+
 type EncounterMethodRate struct {
 	encounterMethod 	NamedAPIResource
 	versionDetails 		[]EncounterVersionDetails

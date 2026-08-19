@@ -15,6 +15,9 @@ func main() {
 		scanner.Scan()
 		user_input := scanner.Text()
 		cleaned_user_input := cleanInput(user_input)
+		if len(cleaned_user_input) == 0 {
+			continue
+		}
 		cmd, ok := commandRegister[cleaned_user_input[0]]
 		if !ok {
 			fmt.Println("Unknown command")
